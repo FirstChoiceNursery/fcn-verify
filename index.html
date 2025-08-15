@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>First Choice Nursery — Verify</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem; }
+  form { max-width: 420px; }
+  input, button { font-size: 1rem; padding: .6rem .8rem; width: 100%; box-sizing: border-box; margin: .2rem 0 1rem; }
+  button { cursor:pointer }
+  .ok { color: #0a7; } .err { color: #c00; }
+</style>
+</head>
+<body>
+  <h2>Verify your submission</h2>
+  <p>Enter your email and the 6-digit code we emailed you.</p>
+  <form id="v">
+    <label>Email</label>
+    <input type="email" id="email" required>
+    <label>6-digit code</label>
+    <input type="text" id="code" pattern="\\d{6}" maxlength="6" inputmode="numeric" required>
+    <button type="submit">Verify</button>
+  </form>
+  <p id="msg"></p>
+
+<script>
+document.getElementById('v').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const code  = document.getElementById('code').value.trim();
+  const msgEl = document.getElementById('msg');
+  if(!/^\d{6}$/.test(code)) { msgEl.textContent = 'Please enter a 6-digit code.'; msgEl.className='err'; return; }
+  msgEl.textContent = 'Checking...'; msgEl.className='';
+  try {
+    const res = await fetch('/api/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, code }) });
+    const data = await res.json().catch(()=> ({}));
+    if(res.ok) { msgEl.textContent = 'Verified — thank you!'; msgEl.className='ok'; }
+    else { msgEl.textContent = data.error || 'Sorry, that code is invalid or expired.'; msgEl.className='err'; }
+  } catch { msgEl.textContent = 'Network error. Please try again.'; msgEl.className='err'; }
+});
+</script>
+</body>
+</html>
